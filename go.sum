@@ -1,0 +1,4 @@
+github.com/1asagne/ScheduleParser v0.0.0-20220312184523-795b7cb8ec8d h1:9w+kN53bgZVRphWjTxas4PgvwQ+wCcLIvipJ4y2DW5E=
+github.com/1asagne/ScheduleParser v0.0.0-20220312184523-795b7cb8ec8d/go.mod h1:QMV9udH9S/+Nb/IzRqApQXPl3rJfPQKYEuU2PUZ6bUI=
+github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80 h1:6Yzfa6GP0rIo/kULo2bwGEkFvCePZ3qHDDTC3/J9Swo=
+github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80/go.mod h1:imJHygn/1yfhB7XSJJKlFZKl/J+dCPAknuiaGOshXAs=
