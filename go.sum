@@ -1,5 +1,5 @@
-github.com/1asagne/ScheduleParser v0.0.0-20220312193331-23cac9576e4e h1:lmzneea8G2pRgdagvWXRF+iLqWCvnQ1L/KdvIXb0uhA=
-github.com/1asagne/ScheduleParser v0.0.0-20220312193331-23cac9576e4e/go.mod h1:QMV9udH9S/+Nb/IzRqApQXPl3rJfPQKYEuU2PUZ6bUI=
+github.com/1asagne/ScheduleParser v0.0.0-20220319200032-fa31f28ca592 h1:zqc7P2X2dPLinz8ijR+psLNLUctdgzh1FeA/+O69VIo=
+github.com/1asagne/ScheduleParser v0.0.0-20220319200032-fa31f28ca592/go.mod h1:YNXgTlhJ5e4QtLPE0kmS4+U6GPr0bNzSlrElo7ivRwc=
 github.com/joho/godotenv v1.4.0 h1:3l4+N6zfMWnkbPEXKng2o2/MR5mSwTrBih4ZEkkz1lg=
 github.com/joho/godotenv v1.4.0/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80 h1:6Yzfa6GP0rIo/kULo2bwGEkFvCePZ3qHDDTC3/J9Swo=

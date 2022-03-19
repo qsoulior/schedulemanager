@@ -3,7 +3,7 @@ module github.com/1asagne/ScheduleManager
 go 1.17
 
 require (
-	github.com/1asagne/ScheduleParser v0.0.0-20220312193331-23cac9576e4e
+	github.com/1asagne/ScheduleParser v0.0.0-20220319200032-fa31f28ca592
 	github.com/joho/godotenv v1.4.0
 )
 

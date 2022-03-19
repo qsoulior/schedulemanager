@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
+	parser "github.com/1asagne/ScheduleParser"
 	"github.com/joho/godotenv"
 )
 
@@ -22,9 +23,14 @@ func (client *MoodleClient) Init(username, password, rootUrl string) error {
 	if err != nil {
 		return err
 	}
+
+	if resp.StatusCode != 200 {
+		return errors.New(fmt.Sprintf("Response status code: %d", resp.StatusCode))
+	}
+
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
@@ -33,6 +39,10 @@ func (client *MoodleClient) Init(username, password, rootUrl string) error {
 	err = json.Unmarshal(body, &bodyJson)
 	if err != nil {
 		return err
+	}
+
+	if errorCode, ok := bodyJson["errorcode"]; ok {
+		return errors.New(errorCode)
 	}
 
 	if token, ok := bodyJson["token"]; !ok {
@@ -121,7 +131,7 @@ type SectionInfo struct {
 	FilesInfo []FileInfo
 }
 
-func (client *MoodleClient) GetSectionsInfo(courseId int) ([]SectionInfo, error) {
+func (client *MoodleClient) GetFilesInfo(courseId int) ([]FileInfo, error) {
 	courseGetContentsUrl := client.RootUrl +
 		"/webservice/rest/server.php?moodlewsrestformat=json&wstoken=%s&wsfunction=core_course_get_contents&courseid=%d"
 	resp, err := http.Get(fmt.Sprintf(courseGetContentsUrl, client.Token, courseId))
@@ -130,7 +140,7 @@ func (client *MoodleClient) GetSectionsInfo(courseId int) ([]SectionInfo, error)
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +151,9 @@ func (client *MoodleClient) GetSectionsInfo(courseId int) ([]SectionInfo, error)
 		return nil, err
 	}
 
-	sectionsInfo := make([]SectionInfo, 0)
+	filesInfo := make([]FileInfo, 0)
 	for _, section := range sections {
 		if section.Name != "Общее" {
-			filesInfo := make([]FileInfo, 0)
 			for _, module := range section.Modules {
 				if module.Name == "Расписание экзаменов" {
 					break
@@ -156,10 +165,9 @@ func (client *MoodleClient) GetSectionsInfo(courseId int) ([]SectionInfo, error)
 					}
 				}
 			}
-			sectionsInfo = append(sectionsInfo, SectionInfo{section.Name, filesInfo})
 		}
 	}
-	return sectionsInfo, nil
+	return filesInfo, nil
 }
 
 func getMoodleEnv(envVars map[string]string) (string, string, string, int, error) {
@@ -186,6 +194,32 @@ func getMoodleEnv(envVars map[string]string) (string, string, string, int, error
 	return moodleUsername, moodlePassword, moodleRootUrl, moodleCourseIdInteger, nil
 }
 
+func downloadMoodleFile(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(fmt.Sprintf("Response status code: %d", resp.StatusCode))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var bodyJson map[string]string
+	_ = json.Unmarshal(body, &bodyJson)
+
+	if errorCode, ok := bodyJson["errorcode"]; ok {
+		return nil, errors.New(errorCode)
+	}
+	return body, err
+}
+
 func scrap() error {
 	envVars, err := godotenv.Read("moodle.env")
 	if err != nil {
@@ -202,12 +236,21 @@ func scrap() error {
 		return err
 	}
 
-	filesInfo, err := moodleClient.GetSectionsInfo(moodleCourseId)
+	filesInfo, err := moodleClient.GetFilesInfo(moodleCourseId)
 	if err != nil {
 		return err
 	}
+
 	for _, fileInfo := range filesInfo {
-		fmt.Println(fileInfo)
+		pdfBytes, err := downloadMoodleFile(fileInfo.Url + "&token=" + moodleClient.Token)
+		if err != nil {
+			return err
+		}
+		jsonBytes, err := parser.ParseScheduleBytes(pdfBytes)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("%v\n\n", string(jsonBytes))
 	}
 	return nil
 }
