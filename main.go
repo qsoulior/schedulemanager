@@ -1,11 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/1asagne/ScheduleManager/internal/moodle"
+)
 
 func main() {
-	err := scrap()
+	err := moodle.Scrap()
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("Scrapping complete")
+	fmt.Println("Main completed")
 }
