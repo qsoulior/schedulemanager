@@ -64,30 +64,34 @@ type ScheduleFile struct {
 	Data []byte
 }
 
-func downloadScheduleFile(scheduleFileInfo ScheduleFileInfo, token string) (ScheduleFile, error) {
+func downloadScheduleFile(scheduleFileInfo ScheduleFileInfo, token string, scheduleCh chan ScheduleFile, errorCh chan error) {
 	resp, err := http.Get(scheduleFileInfo.Url + "&token=" + token)
 	if err != nil {
-		return ScheduleFile{}, err
+		errorCh <- err
+		return
 	}
 
 	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return ScheduleFile{}, errors.New(fmt.Sprintf("Response status code: %d", resp.StatusCode))
+		errorCh <- errors.New(fmt.Sprintf("Response status code: %d", resp.StatusCode))
+		return
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return ScheduleFile{}, err
+		errorCh <- err
+		return
 	}
 
 	var bodyJson map[string]string
 	_ = json.Unmarshal(body, &bodyJson)
 
 	if errorCode, ok := bodyJson["errorcode"]; ok {
-		return ScheduleFile{}, errors.New(errorCode)
+		errorCh <- errors.New(errorCode)
+		return
 	}
-	return ScheduleFile{scheduleFileInfo.Name, body}, err
+	scheduleCh <- ScheduleFile{scheduleFileInfo.Name, body}
 }
 
 func GetScheduleFiles() ([]ScheduleFile, error) {
@@ -109,12 +113,21 @@ func GetScheduleFiles() ([]ScheduleFile, error) {
 
 	scheduleFiles := make([]ScheduleFile, 0)
 
+	scheduleCh := make(chan ScheduleFile)
+	errorCh := make(chan error)
+
 	for _, fileInfo := range scheduleFilesInfo {
-		scheduleFile, err := downloadScheduleFile(fileInfo, moodleClient.Token)
-		if err != nil {
+		go downloadScheduleFile(fileInfo, moodleClient.Token, scheduleCh, errorCh)
+	}
+
+	for i := 0; i < len(scheduleFilesInfo); i++ {
+		select {
+		case scheduleFile := <-scheduleCh:
+			scheduleFiles = append(scheduleFiles, scheduleFile)
+		case err := <-errorCh:
+			fmt.Println(err)
 			return nil, err
 		}
-		scheduleFiles = append(scheduleFiles, scheduleFile)
 	}
 	return scheduleFiles, nil
 }
