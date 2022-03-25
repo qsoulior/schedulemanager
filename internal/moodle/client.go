@@ -8,12 +8,12 @@ import (
 	"net/http"
 )
 
-type MoodleClient struct {
+type Client struct {
 	Token   string
 	RootUrl string
 }
 
-func (client *MoodleClient) Init(username, password, rootUrl string) error {
+func (client *Client) Init(username, password, rootUrl string) error {
 	loginUrl := rootUrl + "/login/token.php?username=%s&password=%s&service=moodle_mobile_app"
 	resp, err := http.Get(fmt.Sprintf(loginUrl, username, password))
 	if err != nil {
@@ -50,7 +50,7 @@ func (client *MoodleClient) Init(username, password, rootUrl string) error {
 	}
 }
 
-func (client *MoodleClient) GetCourseSections(courseId int) ([]Section, error) {
+func (client *Client) GetCourseSections(courseId int) ([]Section, error) {
 	courseGetContentsUrl := client.RootUrl +
 		"/webservice/rest/server.php?moodlewsrestformat=json&wstoken=%s&wsfunction=core_course_get_contents&courseid=%d"
 	resp, err := http.Get(fmt.Sprintf(courseGetContentsUrl, client.Token, courseId))
@@ -73,13 +73,13 @@ func (client *MoodleClient) GetCourseSections(courseId int) ([]Section, error) {
 	return sections, nil
 }
 
-func NewMoodleClient(username, password, rootUrl string) (*MoodleClient, error) {
-	moodleClient := new(MoodleClient)
-	err := moodleClient.Init(username, password, rootUrl)
+func NewClient(username, password, rootUrl string) (*Client, error) {
+	client := new(Client)
+	err := client.Init(username, password, rootUrl)
 	if err != nil {
 		return nil, err
 	}
-	return moodleClient, nil
+	return client, nil
 }
 
 type Content struct {

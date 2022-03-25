@@ -8,39 +8,41 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/1asagne/schedulemanager/internal/schedule"
 )
 
-func getMoodleEnv() (string, string, string, int, error) {
-	moodleUsername := os.Getenv("MOODLE_USERNAME")
-	if moodleUsername == "" {
+func getEnvVars() (string, string, string, int, error) {
+	username := os.Getenv("MOODLE_USERNAME")
+	if username == "" {
 		return "", "", "", 0, errors.New("MOODLE_USERNAME is missing")
 	}
-	moodlePassword := os.Getenv("MOODLE_PASSWORD")
-	if moodlePassword == "" {
+	password := os.Getenv("MOODLE_PASSWORD")
+	if password == "" {
 		return "", "", "", 0, errors.New("MOODLE_PASSWORD is missing")
 	}
-	moodleRootUrl := os.Getenv("MOODLE_ROOT_URL")
-	if moodleRootUrl == "" {
+	rootUrl := os.Getenv("MOODLE_ROOT_URL")
+	if rootUrl == "" {
 		return "", "", "", 0, errors.New("MOODLE_ROOT_URL is missing")
 	}
-	moodleCourseId := os.Getenv("MOODLE_COURSE_ID")
-	if moodleCourseId == "" {
+	courseId := os.Getenv("MOODLE_COURSE_ID")
+	if courseId == "" {
 		return "", "", "", 0, errors.New("MOODLE_COURSE_ID is missing")
 	}
-	moodleCourseIdInteger, err := strconv.Atoi(moodleCourseId)
+	courseIdInt, err := strconv.Atoi(courseId)
 	if err != nil {
 		return "", "", "", 0, err
 	}
-	return moodleUsername, moodlePassword, moodleRootUrl, moodleCourseIdInteger, nil
+	return username, password, rootUrl, courseIdInt, nil
 }
 
-type ScheduleFileInfo struct {
+type FileInfo struct {
 	Name string
 	Url  string
 }
 
-func getScheduleFilesInfo(sections []Section) ([]ScheduleFileInfo, error) {
-	filesInfo := make([]ScheduleFileInfo, 0)
+func getFilesInfo(sections []Section) ([]FileInfo, error) {
+	filesInfo := make([]FileInfo, 0)
 	for _, section := range sections {
 		if section.Name != "Общее" {
 			for _, module := range section.Modules {
@@ -49,7 +51,7 @@ func getScheduleFilesInfo(sections []Section) ([]ScheduleFileInfo, error) {
 				} else if module.ModName == "folder" {
 					for _, content := range module.Contents {
 						if content.Type == "file" {
-							filesInfo = append(filesInfo, ScheduleFileInfo{content.FileName, content.FileUrl})
+							filesInfo = append(filesInfo, FileInfo{content.FileName, content.FileUrl})
 						}
 					}
 				}
@@ -59,13 +61,8 @@ func getScheduleFilesInfo(sections []Section) ([]ScheduleFileInfo, error) {
 	return filesInfo, nil
 }
 
-type ScheduleFile struct {
-	Name string
-	Data []byte
-}
-
-func downloadScheduleFile(scheduleFileInfo ScheduleFileInfo, token string, scheduleCh chan ScheduleFile, errorCh chan error) {
-	resp, err := http.Get(scheduleFileInfo.Url + "&token=" + token)
+func downloadFile(fileInfo FileInfo, accessToken string, fileCh chan schedule.File, errorCh chan error) {
+	resp, err := http.Get(fileInfo.Url + "&token=" + accessToken)
 	if err != nil {
 		errorCh <- err
 		return
@@ -91,43 +88,43 @@ func downloadScheduleFile(scheduleFileInfo ScheduleFileInfo, token string, sched
 		errorCh <- errors.New(errorCode)
 		return
 	}
-	scheduleCh <- ScheduleFile{scheduleFileInfo.Name, body}
+	fileCh <- schedule.File{Name: fileInfo.Name, Data: body}
 }
 
-func GetScheduleFiles() ([]ScheduleFile, error) {
-	moodleUsername, moodlePassword, moodleRootUrl, moodleCourseId, err := getMoodleEnv()
+func DownloadFiles() ([]schedule.File, error) {
+	username, password, rootUrl, courseId, err := getEnvVars()
 	if err != nil {
 		return nil, err
 	}
 
-	moodleClient, err := NewMoodleClient(moodleUsername, moodlePassword, moodleRootUrl)
+	client, err := NewClient(username, password, rootUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	sections, err := moodleClient.GetCourseSections(moodleCourseId)
-	scheduleFilesInfo, err := getScheduleFilesInfo(sections)
+	sections, err := client.GetCourseSections(courseId)
+	filesInfo, err := getFilesInfo(sections)
 	if err != nil {
 		return nil, err
 	}
 
-	scheduleFiles := make([]ScheduleFile, 0)
+	files := make([]schedule.File, 0)
 
-	scheduleCh := make(chan ScheduleFile)
+	fileCh := make(chan schedule.File)
 	errorCh := make(chan error)
 
-	for _, fileInfo := range scheduleFilesInfo {
-		go downloadScheduleFile(fileInfo, moodleClient.Token, scheduleCh, errorCh)
+	for _, fileInfo := range filesInfo {
+		go downloadFile(fileInfo, client.Token, fileCh, errorCh)
 	}
 
-	for i := 0; i < len(scheduleFilesInfo); i++ {
+	for i := 0; i < len(filesInfo); i++ {
 		select {
-		case scheduleFile := <-scheduleCh:
-			scheduleFiles = append(scheduleFiles, scheduleFile)
+		case file := <-fileCh:
+			files = append(files, file)
 		case err := <-errorCh:
 			fmt.Println(err)
 			return nil, err
 		}
 	}
-	return scheduleFiles, nil
+	return files, nil
 }
