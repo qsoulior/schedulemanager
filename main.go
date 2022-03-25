@@ -1,36 +1,32 @@
 package main
 
 import (
-	"fmt"
+	"log"
 
-	"github.com/1asagne/schedulemanager/internal/moodle"
-	"github.com/1asagne/schedulemanager/internal/schedule"
+	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/joho/godotenv"
 )
 
 func main() {
-	err := godotenv.Load("moodle.env")
+	err := godotenv.Load("dev.env")
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
 
-	scheduleFiles, err := moodle.DownloadFiles()
+	// scheduleFiles, err := moodle.DownloadFiles()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
-	fmt.Println("Getting files completed")
+	log.Print("Getting files completed\n")
 
-	scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
+	// scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
 		return
 	}
-	fmt.Println("Parsing files completed")
+	log.Print("Parsing files completed\n")
 
-	for _, i := range scheduleFilesParsed {
-		fmt.Println(i.Name)
-		fmt.Println(string(i.Data))
-	}
+	mongodb.Test()
 }

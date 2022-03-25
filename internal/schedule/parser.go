@@ -1,6 +1,10 @@
 package schedule
 
-import "github.com/1asagne/scheduleparser"
+import (
+	"strings"
+
+	"github.com/1asagne/scheduleparser"
+)
 
 type File struct {
 	Name string
@@ -8,12 +12,12 @@ type File struct {
 }
 
 func parseFile(file File, fileCh chan File, errorCh chan error) {
-	fileDataParsed, err := scheduleparser.ParseScheduleBytes(file.Data)
+	fileDataParsed, err := scheduleparser.ParseBytes(file.Data)
 	if err != nil {
 		errorCh <- err
 		return
 	}
-	fileCh <- File{Name: file.Name, Data: fileDataParsed}
+	fileCh <- File{Name: strings.Split(file.Name, ".")[0], Data: fileDataParsed}
 }
 
 func ParseFiles(files []File) ([]File, error) {

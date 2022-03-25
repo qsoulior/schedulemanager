@@ -122,7 +122,6 @@ func DownloadFiles() ([]schedule.File, error) {
 		case file := <-fileCh:
 			files = append(files, file)
 		case err := <-errorCh:
-			fmt.Println(err)
 			return nil, err
 		}
 	}
