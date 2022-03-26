@@ -4,6 +4,8 @@ import (
 	"log"
 
 	"github.com/1asagne/schedulemanager/internal/mongodb"
+	"github.com/1asagne/schedulemanager/internal/moodle"
+	"github.com/1asagne/schedulemanager/internal/schedule"
 	"github.com/joho/godotenv"
 )
 
@@ -14,19 +16,23 @@ func main() {
 		return
 	}
 
-	// scheduleFiles, err := moodle.DownloadFiles()
+	scheduleFiles, err := moodle.DownloadFiles()
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	log.Print("Getting files completed\n")
 
-	// scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
+	scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 	log.Print("Parsing files completed\n")
 
-	mongodb.Test()
+	if err := mongodb.SaveFiles(scheduleFilesParsed); err != nil {
+		log.Fatal(err)
+		return
+	}
+	log.Print("DB client initialization completed\n")
 }

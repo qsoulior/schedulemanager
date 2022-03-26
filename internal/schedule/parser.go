@@ -1,9 +1,10 @@
 package schedule
 
 import (
+	"encoding/json"
 	"strings"
 
-	"github.com/1asagne/scheduleparser"
+	sp "github.com/1asagne/scheduleparser"
 )
 
 type File struct {
@@ -11,34 +12,44 @@ type File struct {
 	Data []byte
 }
 
-func parseFile(file File, fileCh chan File, errorCh chan error) {
-	fileDataParsed, err := scheduleparser.ParseBytes(file.Data)
+type Schedule struct {
+	Name   string
+	Events []sp.Event
+}
+
+func parseFile(file File, scheduleCh chan Schedule, errorCh chan error) {
+	fileDataParsed, err := sp.ParseBytes(file.Data)
 	if err != nil {
 		errorCh <- err
 		return
 	}
-	fileCh <- File{Name: strings.Split(file.Name, ".")[0], Data: fileDataParsed}
+	schedule := Schedule{}
+	schedule.Name = strings.Split(file.Name, ".")[0]
+	if err := json.Unmarshal(fileDataParsed, &schedule.Events); err != nil {
+		errorCh <- err
+		return
+	}
+	scheduleCh <- schedule
 }
 
-func ParseFiles(files []File) ([]File, error) {
-
-	fileCh := make(chan File)
-	defer close(fileCh)
+func ParseFiles(files []File) ([]Schedule, error) {
+	scheduleCh := make(chan Schedule)
+	defer close(scheduleCh)
 	errorCh := make(chan error)
 	defer close(errorCh)
 
 	for _, file := range files {
-		go parseFile(file, fileCh, errorCh)
+		go parseFile(file, scheduleCh, errorCh)
 	}
 
-	filesParsed := make([]File, 0)
+	schedules := make([]Schedule, 0)
 	for i := 0; i < len(files); i++ {
 		select {
-		case fileParsed := <-fileCh:
-			filesParsed = append(filesParsed, fileParsed)
+		case schedule := <-scheduleCh:
+			schedules = append(schedules, schedule)
 		case err := <-errorCh:
 			return nil, err
 		}
 	}
-	return filesParsed, nil
+	return schedules, nil
 }
