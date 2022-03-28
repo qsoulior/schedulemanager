@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/1asagne/schedulemanager/internal/moodle"
@@ -11,38 +12,45 @@ import (
 )
 
 func main() {
+	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+
 	err := godotenv.Load("dev.env")
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 
 	scheduleFiles, err := moodle.DownloadFiles()
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
-	log.Print("Schedules downloading completed\n")
+	infoLog.Print("Schedules downloading completed\n")
 
 	scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
-	log.Print("Schedules parsing completed\n")
+	infoLog.Print("Schedules parsing completed\n")
 
 	dbAppInstance, err := mongodb.NewAppInstance()
 	if err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
 	defer dbAppInstance.Disconnect()
-	log.Print("DB initialization completed\n")
+	infoLog.Print("DB initialization completed\n")
 
 	if err := dbAppInstance.SaveFiles(scheduleFilesParsed); err != nil {
-		log.Fatal(err)
+		errorLog.Fatal(err)
 	}
-	log.Print("Schedules saving completed\n")
+	infoLog.Print("Schedules saving completed\n")
 
 	webApp := fiber.New()
 	webApp.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Test")
+		names, err := dbAppInstance.GetNames()
+		if err != nil {
+			return c.SendString(err.Error())
+		}
+		return c.JSON(names)
 	})
 
 	webApp.Listen(":3000")

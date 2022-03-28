@@ -71,3 +71,8 @@ func (app *AppInstance) GetFile(name string) (schedule.Schedule, error) {
 	schedules := NewSchedulesDriver(app.db)
 	return schedules.GetOne(name)
 }
+
+func (app *AppInstance) GetNames() ([]string, error) {
+	schedules := NewSchedulesDriver(app.db)
+	return schedules.GetAllNames()
+}

@@ -2,9 +2,11 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -36,7 +38,7 @@ func (driver *SchedulesDriver) InsertMany(schedules []schedule.Schedule) error {
 
 func (driver *SchedulesDriver) GetOne(name string) (schedule.Schedule, error) {
 	var schedule schedule.Schedule
-	err := driver.collection.FindOne(context.TODO(), bson.D{{"name", name}}).Decode(&schedule)
+	err := driver.collection.FindOne(context.TODO(), bson.D{primitive.E{Key: "name", Value: name}}).Decode(&schedule)
 	return schedule, err
 }
 
@@ -50,6 +52,18 @@ func (driver *SchedulesDriver) GetAll() ([]schedule.Schedule, error) {
 		return nil, err
 	}
 	return schedules, nil
+}
+
+func (driver *SchedulesDriver) GetAllNames() ([]string, error) {
+	result, err := driver.collection.Distinct(context.TODO(), "name", bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, len(result))
+	for i := range result {
+		names[i] = fmt.Sprint(result[i])
+	}
+	return names, nil
 }
 
 func (driver *SchedulesDriver) DeleteAll() error {
