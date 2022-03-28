@@ -2,14 +2,10 @@ package mongodb
 
 import (
 	"context"
-	"errors"
-	"os"
-	"time"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type SchedulesDriver struct {
@@ -38,38 +34,25 @@ func (driver *SchedulesDriver) InsertMany(schedules []schedule.Schedule) error {
 	return err
 }
 
+func (driver *SchedulesDriver) GetOne(name string) (schedule.Schedule, error) {
+	var schedule schedule.Schedule
+	err := driver.collection.FindOne(context.TODO(), bson.D{{"name", name}}).Decode(&schedule)
+	return schedule, err
+}
+
+func (driver *SchedulesDriver) GetAll() ([]schedule.Schedule, error) {
+	cursor, err := driver.collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return nil, err
+	}
+	schedules := make([]schedule.Schedule, 0)
+	if err := cursor.All(context.TODO(), &schedules); err != nil {
+		return nil, err
+	}
+	return schedules, nil
+}
+
 func (driver *SchedulesDriver) DeleteAll() error {
 	_, err := driver.collection.DeleteMany(context.TODO(), bson.D{})
 	return err
-}
-
-func SaveFiles(files []schedule.Schedule) error {
-	uri := os.Getenv("MONGODB_URI")
-	if uri == "" {
-		return errors.New("MONGODB_URI is missing in enviroment")
-	}
-
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := client.Connect(ctx); err != nil {
-		return err
-	}
-	defer client.Disconnect(ctx)
-
-	database := client.Database("app")
-
-	schedules := NewSchedulesDriver(database)
-	if err := schedules.DeleteAll(); err != nil {
-		return err
-	}
-	if err := schedules.InsertMany(files); err != nil {
-		return err
-	}
-	return nil
 }
