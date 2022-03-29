@@ -88,8 +88,8 @@ type Content struct {
 	FilePath       string
 	FileSize       int
 	FileUrl        string
-	TimeCreated    int
-	TimeModified   int
+	TimeCreated    int64
+	TimeModified   int64
 	SortOrder      int
 	Mimetype       string
 	IsExternalFile bool

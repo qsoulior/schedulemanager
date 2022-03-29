@@ -6,17 +6,16 @@ import (
 	"os"
 	"time"
 
-	"github.com/1asagne/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type AppInstance struct {
-	db     *mongo.Database
-	client *mongo.Client
+type AppDB struct {
+	client    *mongo.Client
+	Schedules *SchedulesDriver
 }
 
-func (app *AppInstance) Connect() error {
+func (app *AppDB) Connect() error {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		return errors.New("MONGODB_URI is missing in enviroment")
@@ -33,46 +32,26 @@ func (app *AppInstance) Connect() error {
 	if err := client.Connect(ctx); err != nil {
 		return err
 	}
+
+	if err := client.Ping(ctx, nil); err != nil {
+		return err
+	}
+
 	app.client = client
-	app.db = client.Database("app")
+	db := client.Database("app")
+	app.Schedules = NewSchedulesDriver(db)
 	return nil
 }
 
-func (app *AppInstance) Disconnect() error {
+func (app *AppDB) Disconnect() error {
 	return app.client.Disconnect(context.TODO())
 }
 
-func NewAppInstance() (*AppInstance, error) {
-	appDriver := new(AppInstance)
+func NewAppDB() (*AppDB, error) {
+	appDriver := new(AppDB)
 	err := appDriver.Connect()
 	if err != nil {
 		return nil, err
 	}
 	return appDriver, nil
-}
-
-func (app *AppInstance) SaveFiles(files []schedule.Schedule) error {
-	schedules := NewSchedulesDriver(app.db)
-	if err := schedules.DeleteAll(); err != nil {
-		return err
-	}
-	if err := schedules.InsertMany(files); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (app *AppInstance) GetFiles() ([]schedule.Schedule, error) {
-	schedules := NewSchedulesDriver(app.db)
-	return schedules.GetAll()
-}
-
-func (app *AppInstance) GetFile(name string) (schedule.Schedule, error) {
-	schedules := NewSchedulesDriver(app.db)
-	return schedules.GetOne(name)
-}
-
-func (app *AppInstance) GetNames() ([]string, error) {
-	schedules := NewSchedulesDriver(app.db)
-	return schedules.GetAllNames()
 }

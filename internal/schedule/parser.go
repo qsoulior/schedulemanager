@@ -3,18 +3,21 @@ package schedule
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
 	sp "github.com/1asagne/scheduleparser"
 )
 
 type File struct {
-	Name string
-	Data []byte
+	Name     string
+	Modified time.Time
+	Data     []byte
 }
 
 type Schedule struct {
-	Name   string
-	Events []sp.Event
+	Name     string
+	Modified time.Time
+	Events   []sp.Event
 }
 
 func parseFile(file File, scheduleCh chan Schedule, errorCh chan error) {
@@ -29,6 +32,7 @@ func parseFile(file File, scheduleCh chan Schedule, errorCh chan error) {
 		errorCh <- err
 		return
 	}
+	schedule.Modified = file.Modified
 	scheduleCh <- schedule
 }
 

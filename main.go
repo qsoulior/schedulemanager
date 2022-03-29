@@ -32,26 +32,36 @@ func main() {
 	}
 	infoLog.Print("Schedules parsing completed\n")
 
-	dbAppInstance, err := mongodb.NewAppInstance()
+	db, err := mongodb.NewAppDB()
 	if err != nil {
 		errorLog.Fatal(err)
 	}
-	defer dbAppInstance.Disconnect()
+	defer db.Disconnect()
 	infoLog.Print("DB initialization completed\n")
 
-	if err := dbAppInstance.SaveFiles(scheduleFilesParsed); err != nil {
+	if err := db.Schedules.DeleteAll(); err != nil {
+		errorLog.Fatal(err)
+	}
+	if err := db.Schedules.InsertMany(scheduleFilesParsed); err != nil {
 		errorLog.Fatal(err)
 	}
 	infoLog.Print("Schedules saving completed\n")
 
-	webApp := fiber.New()
-	webApp.Get("/", func(c *fiber.Ctx) error {
-		names, err := dbAppInstance.GetNames()
+	web := fiber.New()
+	web.Get("/all", func(c *fiber.Ctx) error {
+		files, err := db.Schedules.GetAll()
 		if err != nil {
-			return c.SendString(err.Error())
+			return c.SendStatus(500)
+		}
+		return c.JSON(files)
+	})
+	web.Get("/info", func(c *fiber.Ctx) error {
+		names, err := db.Schedules.GetAllInfo()
+		if err != nil {
+			return c.SendStatus(500)
 		}
 		return c.JSON(names)
 	})
 
-	webApp.Listen(":3000")
+	web.Listen(":3000")
 }

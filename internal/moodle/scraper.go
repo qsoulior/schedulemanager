@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
 )
@@ -37,8 +38,9 @@ func getEnvVars() (string, string, string, int, error) {
 }
 
 type FileInfo struct {
-	Name string
-	Url  string
+	Name     string
+	Url      string
+	Modified int64
 }
 
 func getFilesInfo(sections []Section) ([]FileInfo, error) {
@@ -51,7 +53,7 @@ func getFilesInfo(sections []Section) ([]FileInfo, error) {
 				} else if module.ModName == "folder" {
 					for _, content := range module.Contents {
 						if content.Type == "file" {
-							filesInfo = append(filesInfo, FileInfo{content.FileName, content.FileUrl})
+							filesInfo = append(filesInfo, FileInfo{content.FileName, content.FileUrl, content.TimeModified})
 						}
 					}
 				}
@@ -88,7 +90,7 @@ func downloadFile(fileInfo FileInfo, accessToken string, fileCh chan schedule.Fi
 		errorCh <- errors.New(errorCode)
 		return
 	}
-	fileCh <- schedule.File{Name: fileInfo.Name, Data: body}
+	fileCh <- schedule.File{Name: fileInfo.Name, Modified: time.Unix(fileInfo.Modified, 0), Data: body}
 }
 
 func DownloadFiles() ([]schedule.File, error) {

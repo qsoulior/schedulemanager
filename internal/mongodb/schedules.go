@@ -2,12 +2,12 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type SchedulesDriver struct {
@@ -47,23 +47,36 @@ func (driver *SchedulesDriver) GetAll() ([]schedule.Schedule, error) {
 	if err != nil {
 		return nil, err
 	}
-	schedules := make([]schedule.Schedule, 0)
-	if err := cursor.All(context.TODO(), &schedules); err != nil {
-		return nil, err
+	results := make([]schedule.Schedule, 0)
+
+	for cursor.Next(context.TODO()) {
+		var result schedule.Schedule
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		results = append(results, result)
 	}
-	return schedules, nil
+	defer cursor.Close(context.TODO())
+	return results, nil
 }
 
-func (driver *SchedulesDriver) GetAllNames() ([]string, error) {
-	result, err := driver.collection.Distinct(context.TODO(), "name", bson.D{})
+func (driver *SchedulesDriver) GetAllInfo() ([]bson.M, error) {
+	opts := options.Find()
+	opts.SetProjection(bson.M{"name": true, "modified": true, "_id": false})
+	cursor, err := driver.collection.Find(context.TODO(), bson.D{}, opts)
 	if err != nil {
 		return nil, err
 	}
-	names := make([]string, len(result))
-	for i := range result {
-		names[i] = fmt.Sprint(result[i])
+	var results []bson.M
+	for cursor.Next(context.TODO()) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			return nil, err
+		}
+		results = append(results, result)
 	}
-	return names, nil
+	defer cursor.Close(context.TODO())
+	return results, nil
 }
 
 func (driver *SchedulesDriver) DeleteAll() error {
