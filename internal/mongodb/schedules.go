@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"time"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,6 +14,11 @@ import (
 type SchedulesDriver struct {
 	db         *mongo.Database
 	collection *mongo.Collection
+}
+
+type ScheduleInfo struct {
+	Name     string    `json:"name"`
+	Modified time.Time `json:"modified"`
 }
 
 func NewSchedulesDriver(db *mongo.Database) *SchedulesDriver {
@@ -60,16 +66,16 @@ func (driver *SchedulesDriver) GetAll() ([]schedule.Schedule, error) {
 	return results, nil
 }
 
-func (driver *SchedulesDriver) GetAllInfo() ([]bson.M, error) {
+func (driver *SchedulesDriver) GetAllInfo() ([]ScheduleInfo, error) {
 	opts := options.Find()
 	opts.SetProjection(bson.M{"name": true, "modified": true, "_id": false})
 	cursor, err := driver.collection.Find(context.TODO(), bson.D{}, opts)
 	if err != nil {
 		return nil, err
 	}
-	var results []bson.M
+	results := make([]ScheduleInfo, 0)
 	for cursor.Next(context.TODO()) {
-		var result bson.M
+		var result ScheduleInfo
 		if err := cursor.Decode(&result); err != nil {
 			return nil, err
 		}

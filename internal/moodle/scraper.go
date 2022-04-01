@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/1asagne/schedulemanager/internal/schedule"
 )
 
@@ -93,7 +94,7 @@ func downloadFile(fileInfo FileInfo, accessToken string, fileCh chan schedule.Fi
 	fileCh <- schedule.File{Name: fileInfo.Name, Modified: time.Unix(fileInfo.Modified, 0), Data: body}
 }
 
-func DownloadFiles() ([]schedule.File, error) {
+func DownloadFiles(db *mongodb.AppDB) ([]schedule.File, error) {
 	username, password, rootUrl, courseId, err := getEnvVars()
 	if err != nil {
 		return nil, err
@@ -110,16 +111,30 @@ func DownloadFiles() ([]schedule.File, error) {
 		return nil, err
 	}
 
-	files := make([]schedule.File, 0)
+	info, err := db.Schedules.GetAllInfo()
+	if err != nil {
+		return nil, err
+	}
+	infoMap := make(map[string]time.Time)
+	for _, item := range info {
+		if val, ok := infoMap[item.Name+".pdf"]; (ok && item.Modified.Unix() > val.Unix()) || !ok {
+			infoMap[item.Name+".pdf"] = item.Modified
+		}
+	}
 
+	files := make([]schedule.File, 0)
 	fileCh := make(chan schedule.File)
 	errorCh := make(chan error)
 
+	newFilesCount := 0
 	for _, fileInfo := range filesInfo {
-		go downloadFile(fileInfo, client.Token, fileCh, errorCh)
+		if val, ok := infoMap[fileInfo.Name]; (ok && fileInfo.Modified > val.Unix()) || !ok {
+			newFilesCount++
+			go downloadFile(fileInfo, client.Token, fileCh, errorCh)
+		}
 	}
 
-	for i := 0; i < len(filesInfo); i++ {
+	for i := 0; i < newFilesCount; i++ {
 		select {
 		case file := <-fileCh:
 			files = append(files, file)

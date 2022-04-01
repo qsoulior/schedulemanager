@@ -20,18 +20,6 @@ func main() {
 		errorLog.Fatal(err)
 	}
 
-	scheduleFiles, err := moodle.DownloadFiles()
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-	infoLog.Print("Schedules downloading completed\n")
-
-	scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-	infoLog.Print("Schedules parsing completed\n")
-
 	db, err := mongodb.NewAppDB()
 	if err != nil {
 		errorLog.Fatal(err)
@@ -39,13 +27,24 @@ func main() {
 	defer db.Disconnect()
 	infoLog.Print("DB initialization completed\n")
 
-	if err := db.Schedules.DeleteAll(); err != nil {
+	scheduleFiles, err := moodle.DownloadFiles(db)
+	if err != nil {
 		errorLog.Fatal(err)
 	}
-	if err := db.Schedules.InsertMany(scheduleFilesParsed); err != nil {
-		errorLog.Fatal(err)
+	infoLog.Printf("Schedules downloading completed. New schedules: %d.\n", len(scheduleFiles))
+
+	if len(scheduleFiles) > 0 {
+		scheduleFilesParsed, err := schedule.ParseFiles(scheduleFiles)
+		if err != nil {
+			errorLog.Fatal(err)
+		}
+		infoLog.Print("Schedules parsing completed\n")
+
+		if err := db.Schedules.InsertMany(scheduleFilesParsed); err != nil {
+			errorLog.Fatal(err)
+		}
+		infoLog.Print("Parsed schedules saving completed\n")
 	}
-	infoLog.Print("Schedules saving completed\n")
 
 	web := fiber.New()
 	web.Get("/all", func(c *fiber.Ctx) error {
