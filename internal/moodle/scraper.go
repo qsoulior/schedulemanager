@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/1asagne/schedulemanager/internal/mongodb"
@@ -111,28 +112,31 @@ func DownloadFiles(db *mongodb.App) ([]schedule.File, error) {
 		return nil, err
 	}
 
-	// info, err := db.Plans.GetAllInfo()
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// infoMap := make(map[string]time.Time)
-	// for _, item := range info {
-	// 	if val, ok := infoMap[item.Name+".pdf"]; (ok && item.Modified.Unix() > val.Unix()) || !ok {
-	// 		infoMap[item.Name+".pdf"] = item.Modified
-	// 	}
-	// }
+	// Getting information about existing plans
+	plansInfo, err := db.Plans.GetInfo()
+	if err != nil {
+		return nil, err
+	}
 
-	files := make([]schedule.File, 0)
+	// Forming map for search
+	plansInfoMap := make(map[string]time.Time, len(plansInfo))
+	for _, planInfo := range plansInfo {
+		plansInfoMap[planInfo.Group] = planInfo.Modified
+	}
+
 	fileCh := make(chan schedule.File)
 	errorCh := make(chan error)
 
+	// Downloading files with new schedules
 	newFilesCount := 0
 	for _, fileInfo := range filesInfo {
-		// if val, ok := infoMap[fileInfo.Name]; (ok && fileInfo.Modified > val.Unix()) || !ok {
-		newFilesCount++
-		go downloadFile(fileInfo, client.Token, fileCh, errorCh)
-		// }
+		if modified, ok := plansInfoMap[strings.Split(fileInfo.Name, ".")[0]]; (ok && fileInfo.Modified > modified.Unix()) || !ok {
+			newFilesCount++
+			go downloadFile(fileInfo, client.Token, fileCh, errorCh)
+		}
 	}
+
+	files := make([]schedule.File, 0)
 
 	for i := 0; i < newFilesCount; i++ {
 		select {

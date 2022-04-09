@@ -84,7 +84,7 @@ type PlanInfo struct {
 	Modified time.Time `json:"modified"`
 }
 
-func (driver *PlansDriver) GetPlansInfo() ([]PlanInfo, error) {
+func (driver *PlansDriver) GetInfo() ([]PlanInfo, error) {
 	cursor, err := driver.collection.Aggregate(context.TODO(), mongo.Pipeline{
 		bson.D{
 			{"$unwind", "$schedules"},
