@@ -94,7 +94,7 @@ func downloadFile(fileInfo FileInfo, accessToken string, fileCh chan schedule.Fi
 	fileCh <- schedule.File{Name: fileInfo.Name, Modified: time.Unix(fileInfo.Modified, 0), Data: body}
 }
 
-func DownloadFiles(db *mongodb.AppDB) ([]schedule.File, error) {
+func DownloadFiles(db *mongodb.App) ([]schedule.File, error) {
 	username, password, rootUrl, courseId, err := getEnvVars()
 	if err != nil {
 		return nil, err
@@ -111,16 +111,16 @@ func DownloadFiles(db *mongodb.AppDB) ([]schedule.File, error) {
 		return nil, err
 	}
 
-	info, err := db.Schedules.GetAllInfo()
-	if err != nil {
-		return nil, err
-	}
-	infoMap := make(map[string]time.Time)
-	for _, item := range info {
-		if val, ok := infoMap[item.Name+".pdf"]; (ok && item.Modified.Unix() > val.Unix()) || !ok {
-			infoMap[item.Name+".pdf"] = item.Modified
-		}
-	}
+	// info, err := db.Plans.GetAllInfo()
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// infoMap := make(map[string]time.Time)
+	// for _, item := range info {
+	// 	if val, ok := infoMap[item.Name+".pdf"]; (ok && item.Modified.Unix() > val.Unix()) || !ok {
+	// 		infoMap[item.Name+".pdf"] = item.Modified
+	// 	}
+	// }
 
 	files := make([]schedule.File, 0)
 	fileCh := make(chan schedule.File)
@@ -128,10 +128,10 @@ func DownloadFiles(db *mongodb.AppDB) ([]schedule.File, error) {
 
 	newFilesCount := 0
 	for _, fileInfo := range filesInfo {
-		if val, ok := infoMap[fileInfo.Name]; (ok && fileInfo.Modified > val.Unix()) || !ok {
-			newFilesCount++
-			go downloadFile(fileInfo, client.Token, fileCh, errorCh)
-		}
+		// if val, ok := infoMap[fileInfo.Name]; (ok && fileInfo.Modified > val.Unix()) || !ok {
+		newFilesCount++
+		go downloadFile(fileInfo, client.Token, fileCh, errorCh)
+		// }
 	}
 
 	for i := 0; i < newFilesCount; i++ {

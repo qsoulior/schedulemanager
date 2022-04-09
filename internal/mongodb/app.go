@@ -10,12 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type AppDB struct {
-	client    *mongo.Client
-	Schedules *SchedulesDriver
+type App struct {
+	client *mongo.Client
+	Plans  *PlansDriver
 }
 
-func (app *AppDB) Connect() error {
+func (app *App) Connect() error {
 	uri := os.Getenv("MONGODB_URI")
 	if uri == "" {
 		return errors.New("MONGODB_URI is missing in enviroment")
@@ -39,16 +39,16 @@ func (app *AppDB) Connect() error {
 
 	app.client = client
 	db := client.Database("app")
-	app.Schedules = NewSchedulesDriver(db)
+	app.Plans = NewPlansDriver(db)
 	return nil
 }
 
-func (app *AppDB) Disconnect() error {
+func (app *App) Disconnect() error {
 	return app.client.Disconnect(context.TODO())
 }
 
-func NewAppDB() (*AppDB, error) {
-	appDriver := new(AppDB)
+func NewApp() (*App, error) {
+	appDriver := new(App)
 	err := appDriver.Connect()
 	if err != nil {
 		return nil, err
