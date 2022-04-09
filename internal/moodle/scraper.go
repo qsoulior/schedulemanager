@@ -121,7 +121,7 @@ func DownloadFiles(db *mongodb.App) ([]schedule.File, error) {
 	// Forming map for search
 	plansInfoMap := make(map[string]time.Time, len(plansInfo))
 	for _, planInfo := range plansInfo {
-		plansInfoMap[planInfo.Group] = planInfo.Modified
+		plansInfoMap[planInfo.Group+".pdf"] = planInfo.Modified
 	}
 
 	fileCh := make(chan schedule.File)
@@ -130,9 +130,19 @@ func DownloadFiles(db *mongodb.App) ([]schedule.File, error) {
 	// Downloading files with new schedules
 	newFilesCount := 0
 	for _, fileInfo := range filesInfo {
-		if modified, ok := plansInfoMap[strings.Split(fileInfo.Name, ".")[0]]; (ok && fileInfo.Modified > modified.Unix()) || !ok {
+		if modified, ok := plansInfoMap[fileInfo.Name]; (ok && fileInfo.Modified > modified.Unix()) || !ok {
 			newFilesCount++
 			go downloadFile(fileInfo, client.Token, fileCh, errorCh)
+		}
+		// Delete used plan info from map
+		delete(plansInfoMap, fileInfo.Name)
+	}
+
+	// Deactivate unused plans
+	for fileName := range plansInfoMap {
+		err := db.Plans.DeactivatePlan(strings.Split(fileName, ".")[0])
+		if err != nil {
+			return nil, err
 		}
 	}
 

@@ -33,16 +33,13 @@ func (driver *PlansDriver) AddSchedules(group string, schedule ...Schedule) erro
 		bson.D{{"$set", bson.D{{"active", true}}}, {"$addToSet", bson.D{{"schedules", bson.D{{"$each", schedule}}}}}},
 		updateOptions,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (driver *PlansDriver) GetSchedules(group string) ([]Schedule, error) {
 	cursor, err := driver.collection.Aggregate(context.TODO(), mongo.Pipeline{
 		bson.D{
-			{"$match", bson.D{{"group", group}}},
+			{"$match", bson.D{{"group", group}, {"active", true}}},
 		},
 		bson.D{
 			{"$unwind", "$schedules"},
@@ -87,6 +84,9 @@ type PlanInfo struct {
 func (driver *PlansDriver) GetInfo() ([]PlanInfo, error) {
 	cursor, err := driver.collection.Aggregate(context.TODO(), mongo.Pipeline{
 		bson.D{
+			{"$match", bson.D{{"active", true}}},
+		},
+		bson.D{
 			{"$unwind", "$schedules"},
 		},
 		bson.D{
@@ -109,4 +109,9 @@ func (driver *PlansDriver) GetInfo() ([]PlanInfo, error) {
 		plansInfo = append(plansInfo, planInfo)
 	}
 	return plansInfo, nil
+}
+
+func (driver *PlansDriver) DeactivatePlan(group string) error {
+	_, err := driver.collection.UpdateOne(context.TODO(), bson.D{{"group", group}}, bson.D{{"$set", bson.D{{"active", false}}}})
+	return err
 }
