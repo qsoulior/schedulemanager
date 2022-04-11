@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  db:
+    image: mongo:5.0
+    ports:
+      - 27017:27017
+    env_file: dev.env
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.web
+    ports: 
+      - 3000:3000
+    env_file: dev.env
+    depends_on:
+      - manager
+  manager:
+    build:
+      context: .
+      dockerfile: Dockerfile.manager
+    env_file: dev.env
+    depends_on:
+      - db

@@ -1,0 +1,14 @@
+FROM golang:1.18
+
+RUN mkdir manager
+WORKDIR /manager
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY internal internal
+COPY cmd/manager cmd/manager
+
+RUN go build -v -o ./manager ./cmd/manager
+
+CMD [ "./manager" ]

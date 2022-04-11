@@ -1,0 +1,15 @@
+FROM golang:1.18
+
+RUN mkdir web
+WORKDIR /web
+
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
+COPY internal/mongodb internal/mongodb
+COPY internal/schedule internal/schedule
+COPY cmd/web cmd/web
+
+RUN go build -v -o ./web ./cmd/web
+
+CMD [ "./web" ]

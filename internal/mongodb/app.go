@@ -16,9 +16,9 @@ type App struct {
 }
 
 func (app *App) Connect() error {
-	uri := os.Getenv("MONGODB_URI")
+	uri := os.Getenv("MONGODB_CONNSTRING")
 	if uri == "" {
-		return errors.New("MONGODB_URI is missing in enviroment")
+		return errors.New("MONGODB_CONNSTRING is missing in enviroment")
 	}
 
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
