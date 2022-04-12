@@ -4,20 +4,29 @@ services:
     image: mongo:5.0
     ports:
       - 27017:27017
-    env_file: dev.env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USER:-user1}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-test1}
   web:
     build: 
       context: .
       dockerfile: Dockerfile.web
     ports: 
       - 3000:3000
-    env_file: dev.env
+    environment:
+      - MONGODB_CONNSTRING=mongodb://${MONGO_USER:-user1}:${MONGO_PASSWORD:-test1}@db
+      - API_TOKEN=${WEB_API_TOKEN}
     depends_on:
       - manager
   manager:
     build:
       context: .
       dockerfile: Dockerfile.manager
-    env_file: dev.env
+    environment:
+      - MONGODB_CONNSTRING=mongodb://${MONGO_USER:-user1}:${MONGO_PASSWORD:-test1}@db
+      - MOODLE_USERNAME=${MOODLE_USERNAME:?}
+      - MOODLE_PASSWORD=${MOODLE_PASSWORD:?}
+      - MOODLE_ROOT_URL=${MOODLE_ROOT_URL:?}
+      - MOODLE_COURSE_ID=${MOODLE_COURSE_ID:?}
     depends_on:
       - db

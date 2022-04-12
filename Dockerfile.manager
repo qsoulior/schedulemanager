@@ -1,14 +1,17 @@
-FROM golang:1.18
+FROM golang:1.18-alpine AS build
 
-RUN mkdir manager
-WORKDIR /manager
+WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY internal internal
-COPY cmd/manager cmd/manager
+COPY ./internal/ ./internal/
+COPY ./cmd/manager/ ./cmd/manager/
 
-RUN go build -v -o ./manager ./cmd/manager
+RUN go build -v -o /manager ./cmd/manager
+
+FROM alpine:latest
+
+COPY --from=build /manager /manager
 
 CMD [ "./manager" ]

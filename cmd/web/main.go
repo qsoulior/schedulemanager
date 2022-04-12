@@ -8,22 +8,12 @@ import (
 	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
-	"github.com/joho/godotenv"
 )
 
-var infoLog, errorLog *log.Logger
-
-func init() {
-	infoLog = log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
-	errorLog = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-
-	err := godotenv.Load("dev.env")
-	if err != nil {
-		errorLog.Fatal(err)
-	}
-}
-
 func main() {
+	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+
 	db, err := mongodb.NewApp()
 	if err != nil {
 		errorLog.Fatal(err)

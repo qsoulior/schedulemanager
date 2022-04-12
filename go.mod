@@ -5,7 +5,6 @@ go 1.18
 require (
 	github.com/1asagne/scheduleparser v0.0.0-20220325183559-44ebe6a3baee
 	github.com/gofiber/fiber/v2 v2.31.0
-	github.com/joho/godotenv v1.4.0
 	go.mongodb.org/mongo-driver v1.9.0
 )
 
