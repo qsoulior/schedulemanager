@@ -69,5 +69,9 @@ func main() {
 	api.Get("/schedules", schedulesHandler)
 	api.Get("/info", infoHandler)
 
-	errorLog.Fatal(app.Listen(":3000"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+	errorLog.Fatal(app.Listen(":" + port))
 }
