@@ -7,6 +7,7 @@ import (
 
 	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
 
@@ -33,12 +34,15 @@ func main() {
 	}
 
 	api := app.Group("/api", func(c *fiber.Ctx) error {
-		if c.Query("token") == apiToken {
+		headers := c.GetReqHeaders()
+		if token, ok := headers["token"]; ok && token == "Bearer "+apiToken {
 			return c.Next()
 		}
 		infoLog.Printf("Unauthorized request from %s\n", c.IP())
 		return fiber.ErrUnauthorized
 	})
+
+	api.Use(cors.New())
 
 	schedulesHandler := func(c *fiber.Ctx) error {
 		group := c.Query("group")
