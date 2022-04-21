@@ -27,6 +27,7 @@ func main() {
 		Max:        500,
 		Expiration: 1 * time.Minute,
 	}))
+	app.Use(cors.New())
 
 	apiToken := os.Getenv("API_TOKEN")
 	if apiToken == "" {
@@ -35,14 +36,12 @@ func main() {
 
 	api := app.Group("/api", func(c *fiber.Ctx) error {
 		headers := c.GetReqHeaders()
-		if token, ok := headers["token"]; ok && token == "Bearer "+apiToken {
+		if token, ok := headers["Authorization"]; ok && token == "Bearer "+apiToken {
 			return c.Next()
 		}
 		infoLog.Printf("Unauthorized request from %s\n", c.IP())
 		return fiber.ErrUnauthorized
 	})
-
-	api.Use(cors.New())
 
 	schedulesHandler := func(c *fiber.Ctx) error {
 		group := c.Query("group")
