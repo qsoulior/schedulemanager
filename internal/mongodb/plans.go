@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/1asagne/schedulemanager/internal/schedule"
@@ -36,6 +37,8 @@ func (driver *PlansDriver) AddSchedules(group string, schedule ...Schedule) erro
 	return err
 }
 
+var ErrNoSchedules = errors.New("There are no schedules for this group")
+
 func (driver *PlansDriver) GetSchedules(group string) ([]Schedule, error) {
 	cursor, err := driver.collection.Aggregate(context.TODO(), mongo.Pipeline{
 		bson.D{
@@ -62,7 +65,10 @@ func (driver *PlansDriver) GetSchedules(group string) ([]Schedule, error) {
 		}
 		schedules = append(schedules, schedule)
 	}
-	return schedules, err
+	if len(schedules) > 0 {
+		return schedules, err
+	}
+	return nil, ErrNoSchedules
 }
 
 func (driver *PlansDriver) GetScheduleLast(group string) (Schedule, error) {
@@ -70,10 +76,7 @@ func (driver *PlansDriver) GetScheduleLast(group string) (Schedule, error) {
 	if err != nil {
 		return Schedule{}, err
 	}
-	if len(schedules) > 0 {
-		return schedules[0], nil
-	}
-	return Schedule{}, nil
+	return schedules[0], nil
 }
 
 type PlanInfo struct {

@@ -45,21 +45,30 @@ func main() {
 
 	schedulesHandler := func(c *fiber.Ctx) error {
 		group := c.Query("group")
-		if c.Query("last") == "" {
-			if schedules, err := db.Plans.GetSchedules(group); err != nil {
-				errorLog.Println(err)
-				return fiber.ErrInternalServerError
-			} else {
-				return c.JSON(schedules)
+
+		handleError := func(err error) *fiber.Error {
+			if err == mongodb.ErrNoSchedules {
+				return fiber.NewError(fiber.StatusBadRequest, err.Error())
 			}
-		}
-		if schedule, err := db.Plans.GetScheduleLast(group); err != nil {
 			errorLog.Println(err)
 			return fiber.ErrInternalServerError
-		} else {
+		}
+
+		if c.Query("newest") == "" {
+			if schedules, err := db.Plans.GetSchedules(group); err != nil {
+				return c.JSON(schedules)
+			} else {
+				return handleError(err)
+			}
+		}
+
+		if schedule, err := db.Plans.GetScheduleLast(group); err != nil {
 			return c.JSON(schedule)
+		} else {
+			return handleError(err)
 		}
 	}
+
 	infoHandler := func(c *fiber.Ctx) error {
 		info, err := db.Plans.GetInfo()
 		if err != nil {
