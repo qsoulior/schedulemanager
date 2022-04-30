@@ -9,8 +9,8 @@ import (
 type Event = scheduleparser.Event
 
 type Schedule struct {
-	Modified time.Time
-	Events   []Event
+	Modified time.Time `json:"modified"`
+	Events   []Event   `json:"events"`
 }
 
 type File struct {

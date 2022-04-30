@@ -80,7 +80,7 @@ func (driver *PlansDriver) GetScheduleLast(group string) (Schedule, error) {
 }
 
 type PlanInfo struct {
-	Group    string    `json:"name"`
+	Group    string    `json:"group"`
 	Modified time.Time `json:"modified"`
 }
 
