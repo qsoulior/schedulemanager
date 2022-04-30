@@ -56,16 +56,16 @@ func main() {
 
 		if c.Query("newest") == "" {
 			if schedules, err := db.Plans.GetSchedules(group); err != nil {
-				return c.JSON(schedules)
-			} else {
 				return handleError(err)
+			} else {
+				return c.JSON(schedules)
 			}
 		}
 
 		if schedule, err := db.Plans.GetScheduleLast(group); err != nil {
-			return c.JSON(schedule)
-		} else {
 			return handleError(err)
+		} else {
+			return c.JSON(schedule)
 		}
 	}
 
