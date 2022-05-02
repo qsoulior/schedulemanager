@@ -2,13 +2,20 @@ package schedule
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/1asagne/scheduleparser"
 )
 
 func parseFile(file File, planCh chan Plan, errorCh chan error) {
-	fileDataParsed, err := scheduleparser.ParseBytes(file.Data)
+	initialYear := file.Modified.Year()
+	if file.Modified.Month() < 8 {
+		initialYear--
+	}
+	initialDate, err := time.Parse("2006-01-02", fmt.Sprintf("%d-09-01", initialYear))
+	fileDataParsed, err := scheduleparser.ParseBytes(file.Data, initialDate)
 	if err != nil {
 		errorCh <- err
 		return
