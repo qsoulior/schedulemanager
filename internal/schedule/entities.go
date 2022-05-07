@@ -3,7 +3,7 @@ package schedule
 import (
 	"time"
 
-	"github.com/1asagne/scheduleparser"
+	"github.com/qsoulior/scheduleparser"
 )
 
 type Event = scheduleparser.Event

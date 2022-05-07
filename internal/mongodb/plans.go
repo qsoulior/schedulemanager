@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/1asagne/schedulemanager/internal/schedule"
+	"github.com/qsoulior/schedulemanager/internal/schedule"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

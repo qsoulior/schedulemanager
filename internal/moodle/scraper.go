@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/1asagne/schedulemanager/internal/mongodb"
-	"github.com/1asagne/schedulemanager/internal/schedule"
+	"github.com/qsoulior/schedulemanager/internal/mongodb"
+	"github.com/qsoulior/schedulemanager/internal/schedule"
 )
 
 func getEnvVars() (string, string, string, int, error) {

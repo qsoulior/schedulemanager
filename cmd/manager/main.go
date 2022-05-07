@@ -4,9 +4,9 @@ import (
 	"log"
 	"os"
 
-	"github.com/1asagne/schedulemanager/internal/mongodb"
-	"github.com/1asagne/schedulemanager/internal/moodle"
-	"github.com/1asagne/schedulemanager/internal/schedule"
+	"github.com/qsoulior/schedulemanager/internal/mongodb"
+	"github.com/qsoulior/schedulemanager/internal/moodle"
+	"github.com/qsoulior/schedulemanager/internal/schedule"
 )
 
 func main() {

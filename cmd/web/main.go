@@ -5,10 +5,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/1asagne/schedulemanager/internal/mongodb"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
+	"github.com/qsoulior/schedulemanager/internal/mongodb"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/1asagne/scheduleparser"
+	"github.com/qsoulior/scheduleparser"
 )
 
 func parseFile(file File, planCh chan Plan, errorCh chan error) {
