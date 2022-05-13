@@ -8,7 +8,7 @@ services:
       - 3000:3000
     environment:
       - MONGODB_CONNSTRING=${MONGODB_CONNSTRING:?}
-      - API_TOKEN=${WEB_API_TOKEN}
+      - API_ALLOWED_ORIGINS=${API_ALLOWED_ORIGINS:-*}
     depends_on:
       - manager
   manager:

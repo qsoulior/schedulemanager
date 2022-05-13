@@ -15,7 +15,7 @@ services:
       - 3000:3000
     environment:
       - MONGODB_CONNSTRING=mongodb://${MONGO_USER:-user1}:${MONGO_PASSWORD:-test1}@db
-      - API_TOKEN=${WEB_API_TOKEN}
+      - API_ALLOWED_ORIGINS=${API_ALLOWED_ORIGINS:-*}
     depends_on:
       - manager
   manager:

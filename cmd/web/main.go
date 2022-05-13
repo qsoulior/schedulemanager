@@ -27,21 +27,14 @@ func main() {
 		Max:        500,
 		Expiration: 1 * time.Minute,
 	}))
-	app.Use(cors.New())
 
-	apiToken := os.Getenv("API_TOKEN")
-	if apiToken == "" {
-		errorLog.Fatal("API_TOKEN is missing in enviroment")
-	}
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: os.Getenv("API_ALLOWED_ORIGINS"),
+		AllowHeaders: "Origin, Content-Type",
+		MaxAge:       300,
+	}))
 
-	api := app.Group("/api", func(c *fiber.Ctx) error {
-		headers := c.GetReqHeaders()
-		if token, ok := headers["Authorization"]; ok && token == "Bearer "+apiToken {
-			return c.Next()
-		}
-		infoLog.Printf("Unauthorized request from %s\n", c.IP())
-		return fiber.ErrUnauthorized
-	})
+	api := app.Group("/api")
 
 	schedulesHandler := func(c *fiber.Ctx) error {
 		group := c.Query("group")

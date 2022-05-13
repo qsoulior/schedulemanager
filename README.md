@@ -20,27 +20,27 @@ docker compose -f docker-compose.prod.yml --env-file <your_env_file> up -d --bui
 
 ### Required Moodle credentials
 ```
-MOODLE_USERNAME=user
-MOODLE_PASSWORD=password
-MOODLE_ROOT_URL=https://example.com
+MOODLE_USERNAME="user"
+MOODLE_PASSWORD="password"
+MOODLE_ROOT_URL="https://www.example.com"
 MOODLE_COURSE_ID=12345
 ```
 
 ### MongoDB credentials
 #### a. For development: Optional MongoDB user and password
-> By default user is *user1*, password is *test1*
+> By default, user is *user1*, password is *test1*
 ```
-MONGO_USER=user1
-MONGO_PASSWORD=test1
+MONGO_USER="user1"
+MONGO_PASSWORD="test1"
 ```
 
 #### b. For production: Required MongoDB connection string
 ```
-MONGODB_CONNSTRING=mongodb+srv://username:password@mongodb0.example.com:27017
+MONGODB_CONNSTRING="mongodb+srv://username:password@mongodb0.example.com:27017"
 ```
 
-### Optional web API access token
-
+### Optional CORS allowed origins
+> By default, the API can be accessed by any origin
 ```
-WEB_API_TOKEN=token
+API_ALLOWED_ORIGINS="https://first.app.com, https://second.app.com"
 ```
