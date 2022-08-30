@@ -50,7 +50,7 @@ func getFilesInfo(sections []Section) ([]FileInfo, error) {
 	for _, section := range sections {
 		if section.Name != "Общее" {
 			for _, module := range section.Modules {
-				if module.Name == "Расписание экзаменов" {
+				if module.Name == "Расписание экзаменов" || module.Name == "Списки групп" {
 					break
 				} else if module.ModName == "folder" {
 					for _, content := range module.Contents {
