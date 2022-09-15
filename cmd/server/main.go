@@ -5,13 +5,12 @@ import (
 	"log"
 
 	"github.com/qsoulior/schedulemanager/internal/app"
-	"github.com/qsoulior/schedulemanager/internal/app/manager"
+	"github.com/qsoulior/schedulemanager/internal/app/server"
 )
 
 func main() {
 	configPath := flag.String("c", "", "configuration file path")
 	flag.Parse()
-
 	if *configPath == "" {
 		flag.PrintDefaults()
 		return
@@ -21,5 +20,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	manager.Run(config)
+	server.Run(config)
 }

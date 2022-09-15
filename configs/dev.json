@@ -1,0 +1,15 @@
+{
+  "server": {
+    "port": 3000,
+    "allowed_origins": "*" 
+  },
+  "mongo": {
+    "uri": "mongodb://user1:test1@example.host:27017/"
+  },
+  "moodle": {
+    "host": "https://example.com",
+    "username": "",
+    "password": "",
+    "course_id": 0
+  }
+}

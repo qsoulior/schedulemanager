@@ -1,17 +1,25 @@
-FROM golang:1.18-alpine AS build
+FROM golang:1.19-alpine AS build
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-COPY ./internal/ ./internal/
-COPY ./cmd/manager/ ./cmd/manager/
+COPY cmd/manager cmd/manager
+COPY internal/app/config.go internal/app/ 
+COPY internal/app/manager internal/app/manager
+COPY internal/entity internal/entity
+COPY internal/usecase internal/usecase
+COPY internal/repository internal/repository
+COPY pkg pkg
 
-RUN go build -v -o /manager ./cmd/manager
+RUN go build -v -o /app/manager /app/cmd/manager
 
 FROM alpine:latest
 
-COPY --from=build /manager /manager
+WORKDIR /app
 
-CMD [ "./manager" ]
+COPY configs configs
+COPY --from=build /app/manager manager
+
+CMD [ "./manager", "-c", "configs/dev.json"]

@@ -3,21 +3,12 @@ services:
   web:
     build: 
       context: .
-      dockerfile: Dockerfile.web
+      dockerfile: Dockerfile.server
     ports: 
       - 3000:3000
-    environment:
-      - MONGODB_CONNSTRING=${MONGODB_CONNSTRING:?}
-      - API_ALLOWED_ORIGINS=${API_ALLOWED_ORIGINS:-*}
     depends_on:
       - manager
   manager:
     build:
       context: .
       dockerfile: Dockerfile.manager
-    environment:
-      - MONGODB_CONNSTRING=${MONGODB_CONNSTRING:?}
-      - MOODLE_USERNAME=${MOODLE_USERNAME:?}
-      - MOODLE_PASSWORD=${MOODLE_PASSWORD:?}
-      - MOODLE_ROOT_URL=${MOODLE_ROOT_URL:?}
-      - MOODLE_COURSE_ID=${MOODLE_COURSE_ID:?}
