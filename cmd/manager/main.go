@@ -2,13 +2,14 @@ package main
 
 import (
 	"flag"
-	"log"
 
 	"github.com/qsoulior/schedulemanager/internal/app"
 	"github.com/qsoulior/schedulemanager/internal/app/manager"
 )
 
 func main() {
+	log := app.NewLogger()
+
 	configPath := flag.String("c", "", "configuration file path")
 	flag.Parse()
 
@@ -18,8 +19,8 @@ func main() {
 	}
 	config, err := app.NewConfig(*configPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Failed to load config")
 	}
 
-	manager.Run(config)
+	manager.Run(config, log)
 }

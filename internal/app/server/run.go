@@ -2,7 +2,7 @@ package server
 
 import (
 	"fmt"
-	"log"
+	"strconv"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -13,17 +13,19 @@ import (
 	"github.com/qsoulior/schedulemanager/internal/repository"
 	"github.com/qsoulior/schedulemanager/internal/usecase"
 	"github.com/qsoulior/schedulemanager/pkg/mongodb"
+	"github.com/rs/zerolog"
 )
 
-func Run(config *app.Config) {
+func Run(config *app.Config, log *zerolog.Logger) {
 	mongo, err := mongodb.NewContext(config.Mongo.URI)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err).Msg("Database connection failed")
 	}
+	log.Info().Msg("Connected to database")
 	defer mongo.Disconnect()
 	mongoDatabase := mongo.Client.Database("app")
 
-	service := usecase.NewPlanService(repository.NewMongo(mongoDatabase), nil)
+	service := usecase.NewPlanService(repository.NewMongo(mongoDatabase), nil, log)
 	controller := http.NewPlanController(service)
 
 	app := fiber.New()
@@ -42,5 +44,8 @@ func Run(config *app.Config) {
 	api.Get("/schedules", controller.GetSchedules)
 	api.Get("/info", controller.GetPlansInfo)
 
-	log.Fatal(app.Listen(fmt.Sprintf(":%d", config.Server.Port)))
+	log.Info().Str("port", strconv.Itoa(config.Server.Port)).Msg("Starting http server")
+	if err := app.Listen(fmt.Sprintf(":%d", config.Server.Port)); err != nil {
+		log.Fatal().Err(err).Msg("Server listening failed")
+	}
 }

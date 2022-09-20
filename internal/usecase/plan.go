@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -11,6 +11,7 @@ import (
 	"github.com/qsoulior/schedulemanager/internal/repository"
 	"github.com/qsoulior/schedulemanager/pkg/moodle"
 	"github.com/qsoulior/scheduleparser"
+	"github.com/rs/zerolog"
 )
 
 type Plan interface {
@@ -23,13 +24,14 @@ type Plan interface {
 type PlanService struct {
 	db  repository.PlanDatabase
 	web repository.PlanWeb
+	log *zerolog.Logger
 }
 
-func NewPlanService(db repository.PlanDatabase, web repository.PlanWeb) Plan {
-	return &PlanService{db, web}
+func NewPlanService(db repository.PlanDatabase, web repository.PlanWeb, log *zerolog.Logger) Plan {
+	return &PlanService{db, web, log}
 }
 
-func (service *PlanService) parseFiles(files []entity.File) ([]entity.Plan, error) {
+func (s *PlanService) parseFiles(files []entity.File) ([]entity.Plan, error) {
 	planCh := make(chan *entity.Plan)
 	defer close(planCh)
 	errCh := make(chan error)
@@ -61,24 +63,25 @@ func (service *PlanService) parseFiles(files []entity.File) ([]entity.Plan, erro
 		case plan := <-planCh:
 			plans = append(plans, *plan)
 		case err := <-errCh:
+			s.log.Error().Err(err).Msg("Failed to parse file")
 			return nil, err
 		}
 	}
 	return plans, nil
 }
 
-func (service *PlanService) AddSchedules(ctx context.Context, sourceId int) error {
-	filesInfo, err := service.web.GetFilesInfo(sourceId)
+func (s *PlanService) AddSchedules(ctx context.Context, sourceId int) error {
+	filesInfo, err := s.web.GetFilesInfo(sourceId)
 	if err != nil {
 		return err
 	}
-	log.Printf("New files info received: %d\n", len(filesInfo))
+	s.log.Info().Str("count", strconv.Itoa(len(filesInfo))).Msg("New files info received")
 
-	plansInfo, err := service.db.GetPlansInfo(ctx)
+	plansInfo, err := s.db.GetPlansInfo(ctx)
 	if err != nil {
 		return err
 	}
-	log.Printf("Plans info received: %d\n", len(plansInfo))
+	s.log.Info().Str("count", strconv.Itoa(len(plansInfo))).Msg("Plans info received")
 
 	plansInfoMap := make(map[string]time.Time, len(plansInfo))
 	for _, planInfo := range plansInfo {
@@ -96,54 +99,58 @@ func (service *PlanService) AddSchedules(ctx context.Context, sourceId int) erro
 	}
 
 	for fileName := range plansInfoMap {
-		err := service.db.DeactivatePlan(ctx, fileName)
+		err := s.db.DeactivatePlan(ctx, fileName)
 		if err != nil {
 			return err
 		}
 	}
-	log.Printf("Old plans deactivated: %d\n", len(plansInfoMap))
+	s.log.Info().Str("count", strconv.Itoa(len(plansInfoMap))).Msg("Old plans deactivated")
 
-	newFiles, err := service.web.GetFiles(newFilesInfo)
+	newFiles, err := s.web.GetFiles(newFilesInfo)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("New files received: %d\n", len(newFiles))
+	s.log.Info().Str("count", strconv.Itoa(len(newFiles))).Msg("New files received")
 
 	if len(newFiles) > 0 {
-		plans, err := service.parseFiles(newFiles)
+		plans, err := s.parseFiles(newFiles)
 		if err != nil {
 			return err
 		}
 		for _, plan := range plans {
-			if err := service.db.AddSchedules(ctx, plan.Group, plan.Schedules...); err != nil {
+			if err := s.db.AddSchedules(ctx, plan.Group, plan.Schedules...); err != nil {
 				return err
 			}
 		}
-		log.Printf("New plans saved: %d\n", len(plans))
+		s.log.Info().Str("count", strconv.Itoa(len(plans))).Msg("New plans saved")
 	}
 
 	return nil
 }
-func (service *PlanService) GetSchedules(ctx context.Context, group string) ([]entity.Schedule, error) {
-	schedules, err := service.db.GetSchedules(ctx, group)
+
+func (s *PlanService) GetSchedules(ctx context.Context, group string) ([]entity.Schedule, error) {
+	schedules, err := s.db.GetSchedules(ctx, group)
 	if err != nil {
+		s.log.Error().Err(err).Str("group", group).Msg("Failed to get schedules")
 		return nil, err
 	}
 	return schedules, nil
 }
 
-func (service *PlanService) GetLatestSchedule(ctx context.Context, group string) (*entity.Schedule, error) {
-	schedule, err := service.db.GetLatestSchedule(ctx, group)
+func (s *PlanService) GetLatestSchedule(ctx context.Context, group string) (*entity.Schedule, error) {
+	schedule, err := s.db.GetLatestSchedule(ctx, group)
 	if err != nil {
+		s.log.Error().Err(err).Str("group", group).Msg("Failed to get latest schedule")
 		return nil, err
 	}
 	return schedule, nil
 }
 
-func (service *PlanService) GetPlansInfo(ctx context.Context) ([]entity.PlanInfo, error) {
-	plansInfo, err := service.db.GetPlansInfo(ctx)
+func (s *PlanService) GetPlansInfo(ctx context.Context) ([]entity.PlanInfo, error) {
+	plansInfo, err := s.db.GetPlansInfo(ctx)
 	if err != nil {
+		s.log.Error().Err(err).Msg("Failed to get plans info")
 		return nil, err
 	}
 	return plansInfo, nil

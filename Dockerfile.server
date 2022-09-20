@@ -6,7 +6,7 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
 COPY cmd/server cmd/server
-COPY internal/app/config.go internal/app/ 
+COPY internal/app/config.go internal/app/logger.go internal/app/ 
 COPY internal/app/server internal/app/server
 COPY internal/controller internal/controller 
 COPY internal/entity internal/entity

@@ -63,7 +63,10 @@ func (repo *Mongo) GetLatestSchedule(ctx context.Context, group string) (*entity
 	if err != nil {
 		return nil, err
 	}
-	return &schedules[0], nil
+	if len(schedules) > 0 {
+		return &schedules[0], nil
+	}
+	return nil, nil
 }
 
 func (repo *Mongo) GetPlansInfo(ctx context.Context) ([]entity.PlanInfo, error) {
