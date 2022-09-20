@@ -3,7 +3,7 @@ services:
   server:
     build: 
       context: .
-      dockerfile: Dockerfile.server
+      dockerfile: internal/app/server/Dockerfile
     ports: 
       - 3000:3000
     depends_on:
@@ -11,4 +11,4 @@ services:
   manager:
     build:
       context: .
-      dockerfile: Dockerfile.manager
+      dockerfile: internal/app/manager/Dockerfile
