@@ -1,5 +1,9 @@
 # Schedule Manager
 
+[![Go Reference](https://img.shields.io/badge/-reference-007d9c?style=flat-square&logo=go&logoColor=white)](https://pkg.go.dev/github.com/qsoulior/schedulemanager)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/qsoulior/schedulemanager?style=flat-square)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qsoulior/schedulemanager?style=flat-square)](https://goreportcard.com/report/github.com/qsoulior/schedulemanager)
+
 Schedule Manager is app for 
 1. downloading and parsing PDF schedules with specific layout,
 2. providing these parsed schedules in JSON via web API.
