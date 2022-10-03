@@ -8,7 +8,7 @@ Schedule Manager is app for
 
 ### For development
 There must be file `configs/docker.dev.json` before running.
-> Default MongoDB connection string is *mongodb://user1:test1@host.docker.internal:27017*.
+> Default MongoDB connection string is `mongodb://user1:test1@host.docker.internal:27017`.
 ```
 docker compose -f docker-compose.dev.yml up -d
 ```
