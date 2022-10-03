@@ -1,0 +1,32 @@
+services:
+  db:
+    image: mongo:5.0
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user1
+      - MONGO_INITDB_ROOT_PASSWORD=test1
+
+  server:
+    build:
+      context: .
+      dockerfile: ./internal/app/server/Dockerfile
+    volumes:
+      - ./configs:/configs
+    environment:
+      - CONFIG_PATH=/configs/docker.dev.json
+    ports:
+      - 3000:3000
+    depends_on:
+      - manager
+    
+  manager:
+    build:
+      context: .
+      dockerfile: ./internal/app/manager/Dockerfile
+    volumes:
+      - ./configs:/configs
+    environment:
+      - CONFIG_PATH=/configs/docker.dev.json
+    depends_on:
+      - db

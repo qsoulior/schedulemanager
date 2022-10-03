@@ -19,7 +19,6 @@ FROM alpine:latest
 
 WORKDIR /app
 
-COPY configs configs
 COPY --from=build /app/manager manager
 
-CMD [ "./manager", "-c", "configs/dev.json"]
+CMD [ "./manager" ]

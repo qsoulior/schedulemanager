@@ -2,45 +2,42 @@
 
 Schedule Manager is app for 
 1. downloading and parsing PDF schedules with specific layout,
-2. providing these parsed schedules in JSON via API.
+2. providing these parsed schedules in JSON via web API.
 
-## Installation with Docker Compose
+## Run with Docker Compose
 
 ### For development
+There must be file `configs/docker.dev.json` before running.
+> Default MongoDB connection string is *mongodb://user1:test1@host.docker.internal:27017*.
 ```
-docker compose -f docker-compose.dev.yml --env-file <your_env_file> up -d --build
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 ### For production
+There must be file `configs/docker.prod.json` before running.
 ```
-docker compose -f docker-compose.prod.yml --env-file <your_env_file> up -d --build
-```
-
-## Setting environment variables
-
-### Required Moodle credentials
-```
-MOODLE_USERNAME="user"
-MOODLE_PASSWORD="password"
-MOODLE_ROOT_URL="https://www.example.com"
-MOODLE_COURSE_ID=12345
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-### MongoDB credentials
-#### a. For development: Optional MongoDB user and password
-> By default, user is *user1*, password is *test1*
-```
-MONGO_USER="user1"
-MONGO_PASSWORD="test1"
-```
+## Configuration
+JSON configuration files are stored in folder `configs`.
+Config path must be stored in `CONFIG_PATH` environment variable.
 
-#### b. For production: Required MongoDB connection string
-```
-MONGODB_CONNSTRING="mongodb+srv://username:password@mongodb0.example.com:27017"
-```
-
-### Optional CORS allowed origins
-> By default, the API can be accessed by any origin
-```
-API_ALLOWED_ORIGINS="https://first.app.com, https://second.app.com"
+`configs/example.json`
+```json
+{
+  "server": {
+    "port": 3000,
+    "allowed_origins": "*" 
+  },
+  "mongo": {
+    "uri": "mongodb://user1:test1@example.host:27017/"
+  },
+  "moodle": {
+    "host": "https://example.com",
+    "username": "",
+    "password": "",
+    "course_id": 0
+  }
+}
 ```

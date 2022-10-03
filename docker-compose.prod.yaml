@@ -1,0 +1,22 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: ./internal/app/server/Dockerfile
+    volumes:
+      - ./configs:/configs
+    environment:
+      - CONFIG_PATH=/configs/docker.prod.json
+    ports:
+      - 3000:3000
+    depends_on:
+      - manager
+    
+  manager:
+    build:
+      context: .
+      dockerfile: ./internal/app/manager/Dockerfile
+    volumes:
+      - ./configs:/configs
+    environment:
+      - CONFIG_PATH=/configs/docker.prod.json

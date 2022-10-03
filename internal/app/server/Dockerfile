@@ -20,10 +20,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
-
-COPY configs configs
 COPY --from=build /app/server server
 
 EXPOSE 3000
  
-CMD [ "./server", "-c", "configs/dev.json"]
+CMD [ "./server" ]
